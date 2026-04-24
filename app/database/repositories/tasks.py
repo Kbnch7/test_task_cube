@@ -39,23 +39,22 @@ class TasksRepository:
         return task
 
     async def update(self, session: AsyncSession, task_data: TaskUpdate) -> Task|None:
-        async with session.begin():
-            result = await session.execute(
-                select(Task).where(Task.id == task_data.id)
-            )
-            task = result.scalar_one_or_none()
-            if task:
-                task.status = task_data.status
-            return task
+        result = await session.execute(
+            select(Task).where(Task.id == task_data.id)
+        )
+        task = result.scalar_one_or_none()
+        if task:
+            task.status = task_data.status
+        return task
 
     async def delete(self, session: AsyncSession, task_data: TaskDelete) -> Task|None:
-        async with session.begin():
-            result = await session.execute(
-                select(Task).where(Task.id == task_data.id)
-            )
-            task = result.scalar_one_or_none()
-            if task:
-                session.delete(task)
-            return task
+        result = await session.execute(
+            select(Task).where(Task.id == task_data.id)
+        )
+        task = result.scalar_one_or_none()
+        if task:
+            await session.delete(task)
+            await session.flush()
+        return task
 
 tasks_repository = TasksRepository()

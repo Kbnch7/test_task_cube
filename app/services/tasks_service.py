@@ -23,6 +23,7 @@ class TasksService:
     @catch_sqlalchemy_errors
     async def create(self, session: AsyncSession, task_data: TaskCreate) -> Task:
         task = await self.tasks_repository.create(session, task_data)
+        await session.commit()
         return task
 
     @catch_sqlalchemy_errors
@@ -30,6 +31,7 @@ class TasksService:
         self, session: AsyncSession, tasks_pagination: Pagination
     ) -> list[Task]:
         tasks = await self.tasks_repository.read_all(session, tasks_pagination)
+        await session.commit()
         return tasks
 
     @catch_sqlalchemy_errors
@@ -41,13 +43,15 @@ class TasksService:
     @catch_sqlalchemy_errors
     @catch_task_not_found_error
     async def update(self, session: AsyncSession, task_data: TaskUpdate) -> Task:
-        task = await self.tasks_repository.update(session, task_data)
+        async with session.begin():
+            task = await self.tasks_repository.update(session, task_data)
         return task
 
     @catch_sqlalchemy_errors
     @catch_task_not_found_error
     async def delete(self, session: AsyncSession, task_data: TaskDelete):
-        task = await self.tasks_repository.delete(session, task_data)
+        async with session.begin():
+            task = await self.tasks_repository.delete(session, task_data)
         return task
 
 tasks_service = TasksService(tasks_repository)
