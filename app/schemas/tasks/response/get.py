@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -9,8 +10,8 @@ class TaskResponse(BaseModel):
     status: str
     description: str
     user_id: UUID
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 class TaskResponseList(BaseModel):
     tasks: list[TaskResponse]
