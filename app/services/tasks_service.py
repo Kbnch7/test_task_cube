@@ -14,6 +14,7 @@ from app.services.utils.decorators import (
     catch_sqlalchemy_errors,
     catch_task_not_found_error,
 )
+from app.services.utils.exceptions import TaskAlreadyDoneError
 
 
 class TasksService:
@@ -44,6 +45,9 @@ class TasksService:
     @catch_task_not_found_error
     async def update(self, session: AsyncSession, task_data: TaskUpdate) -> Task:
         async with session.begin():
+            task = await self.tasks_repository.read(session, TaskGet(id=task_data.id))
+            if task.status == 'done':
+                raise TaskAlreadyDoneError()
             task = await self.tasks_repository.update(session, task_data)
         return task
 

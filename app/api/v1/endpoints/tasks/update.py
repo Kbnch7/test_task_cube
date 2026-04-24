@@ -8,7 +8,11 @@ from app.database.session import get_db
 from app.schemas.tasks.request import TaskUpdate
 from app.schemas.tasks.response import TaskResponse
 from app.services.tasks_service import tasks_service
-from app.services.utils.exceptions import DatabaseError, TaskNotFoundError
+from app.services.utils.exceptions import (
+    DatabaseError,
+    TaskAlreadyDoneError,
+    TaskNotFoundError,
+)
 
 
 @tasks_router.patch(
@@ -34,4 +38,9 @@ async def update_task_handler(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
+        ) from e
+    except TaskAlreadyDoneError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Task already done"
         ) from e

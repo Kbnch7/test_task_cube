@@ -11,6 +11,7 @@ def catch_sqlalchemy_errors(func):
         try:
             return await func(*args, **kwargs)
         except SQLAlchemyError as e:
+            print(e)
             raise DatabaseError from e
     return wrapper
 

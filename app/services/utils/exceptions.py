@@ -3,3 +3,6 @@ class DatabaseError(Exception):
 
 class TaskNotFoundError(Exception):
     pass
+
+class TaskAlreadyDoneError(Exception):
+    pass
