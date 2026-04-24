@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.session import get_db
+from app.data.session import get_db
 from app.schemas.tasks.request import TaskCreate
 from app.schemas.tasks.response import TaskResponse
 from app.services.tasks_service import tasks_service

@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.database.models import Task
-from app.database.session import get_db
+from app.data.models import Task
+from app.data.session import get_db
 from app.main import app
 from app.services.utils.exceptions import TaskAlreadyDoneError, TaskNotFoundError
 

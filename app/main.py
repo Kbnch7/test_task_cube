@@ -14,8 +14,8 @@ from .config import (
     POSTGRES_PASSWORD,
     POSTGRES_USER,
 )
-from .database.models import Base
-from .database.session import engine
+from .data.models import Base
+from .data.session import engine
 
 
 @asynccontextmanager

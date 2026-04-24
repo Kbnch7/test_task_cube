@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Task
-from app.database.repositories import TasksRepository
-from app.database.repositories.tasks import tasks_repository
+from app.data.models import Task
+from app.data.repositories import TasksRepository
+from app.data.repositories.tasks import tasks_repository
 from app.schemas.tasks.request import (
     Pagination,
     TaskCreate,

@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import Task
+from app.data.models import Task
 from app.schemas.tasks.request import (
     Pagination,
     TaskCreate,
