@@ -2,7 +2,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Task
-from app.schemas.tasks.request import TaskCreate, TaskDelete, TaskGet, TaskUpdate
+from app.schemas.tasks.request import (
+    Pagination,
+    TaskCreate,
+    TaskDelete,
+    TaskGet,
+    TaskUpdate,
+)
 
 
 class TasksRepository:
@@ -14,8 +20,14 @@ class TasksRepository:
             await session.refresh(task)
             return task
 
-    async def read_all(self, session: AsyncSession) -> list[Task]:
-        result = await session.execute(select(Task))
+    async def read_all(
+        self, session: AsyncSession, pagination: Pagination
+    ) -> list[Task]:
+        result = await session.execute(
+            select(Task)
+            .offset(pagination.skip)
+            .limit(pagination.limit)
+        )
         tasks = result.scalars().all()
         return tasks
 
@@ -45,3 +57,5 @@ class TasksRepository:
             if task:
                 session.delete(task)
             return task
+
+tasks_repository = TasksRepository()
