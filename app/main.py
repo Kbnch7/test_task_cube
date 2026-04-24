@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_healthchecks.api.router import HealthcheckRouter, Probe
 from fastapi_healthchecks.checks.postgres import PostgreSqlCheck
+from fastapi_healthchecks.checks.redis import RedisCheck
 
 from app.api.api_router import main_router as router
 
@@ -13,6 +14,8 @@ from .config import (
     DATABASE_PORT,
     POSTGRES_PASSWORD,
     POSTGRES_USER,
+    REDIS_PORT,
+    REDIS_HOST
 )
 from .data.models import Base
 from .data.session import engine
@@ -45,6 +48,10 @@ app.include_router(
                     password=POSTGRES_PASSWORD,
                     port=DATABASE_PORT,
                     database=DATABASE_NAME
+                ),
+                RedisCheck(
+                    host=REDIS_HOST,
+                    port=REDIS_PORT,
                 ),
             ],
         ),
