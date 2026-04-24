@@ -6,14 +6,21 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.data.models import Task
+from app.data.redis.redis_session import get_redis
 from app.data.session import get_db
 from app.main import app
 from app.services.utils.exceptions import TaskAlreadyDoneError, TaskNotFoundError
 
 
+async def override_get_redis():
+    mock = AsyncMock()
+    mock.get = AsyncMock(return_value=None)
+    yield mock
+
 async def override_get_db():
     yield AsyncMock()
 
+app.dependency_overrides[get_redis] = override_get_redis
 app.dependency_overrides[get_db] = override_get_db
 
 USER_ID = uuid.uuid4()
