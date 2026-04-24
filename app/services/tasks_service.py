@@ -22,40 +22,42 @@ class TasksService:
         self.tasks_repository = tasks_repository
 
     @catch_sqlalchemy_errors
-    async def create(self, session: AsyncSession, task_data: TaskCreate) -> Task:
-        task = await self.tasks_repository.create(session, task_data)
-        await session.commit()
+    async def create(self, db_session: AsyncSession, task_data: TaskCreate) -> Task:
+        task = await self.tasks_repository.create(db_session, task_data)
+        await db_session.commit()
         return task
 
     @catch_sqlalchemy_errors
     async def read_all(
-        self, session: AsyncSession, tasks_pagination: Pagination
+        self, db_session: AsyncSession, tasks_pagination: Pagination
     ) -> list[Task]:
-        tasks = await self.tasks_repository.read_all(session, tasks_pagination)
-        await session.commit()
+        tasks = await self.tasks_repository.read_all(db_session, tasks_pagination)
+        await db_session.commit()
         return tasks
 
     @catch_sqlalchemy_errors
     @catch_task_not_found_error
-    async def read(self, session: AsyncSession, task_data: TaskGet) -> Task:
-        task = await self.tasks_repository.read(session,task_data)
+    async def read(self, db_session: AsyncSession, task_data: TaskGet) -> Task:
+        task = await self.tasks_repository.read(db_session,task_data)
         return task
 
     @catch_sqlalchemy_errors
     @catch_task_not_found_error
-    async def update(self, session: AsyncSession, task_data: TaskUpdate) -> Task:
-        async with session.begin():
-            task = await self.tasks_repository.read(session, TaskGet(id=task_data.id))
+    async def update(self, db_session: AsyncSession, task_data: TaskUpdate) -> Task:
+        async with db_session.begin():
+            task = await self.tasks_repository.read(
+                db_session, TaskGet(id=task_data.id)
+            )
             if task.status == 'done':
                 raise TaskAlreadyDoneError()
-            task = await self.tasks_repository.update(session, task_data)
+            task = await self.tasks_repository.update(db_session, task_data)
         return task
 
     @catch_sqlalchemy_errors
     @catch_task_not_found_error
-    async def delete(self, session: AsyncSession, task_data: TaskDelete):
-        async with session.begin():
-            task = await self.tasks_repository.delete(session, task_data)
+    async def delete(self, db_session: AsyncSession, task_data: TaskDelete):
+        async with db_session.begin():
+            task = await self.tasks_repository.delete(db_session, task_data)
         return task
 
 tasks_service = TasksService(tasks_repository)

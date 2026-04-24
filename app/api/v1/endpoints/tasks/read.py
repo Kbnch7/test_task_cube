@@ -1,9 +1,13 @@
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query, status
+from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.endpoints.tasks.tasks_router import tasks_router
+from app.config import CACHE_TTL, CACHE_TTL_TASKS
+from app.data.redis.redis_session import get_redis
+from app.data.redis.utils import get_object_from_redis, set_object_to_redis
 from app.data.session import get_db
 from app.schemas.tasks.request import Pagination, TaskGet
 from app.schemas.tasks.response import TaskResponse, TaskResponseList
@@ -19,12 +23,22 @@ from app.services.utils.exceptions import DatabaseError, TaskNotFoundError
 async def get_tasks_handler(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
-    session: AsyncSession = Depends(get_db)
+    db_session: AsyncSession = Depends(get_db),
+    redis_session: Redis = Depends(get_redis)
 ) -> TaskResponseList:
     try:
         pagination_schema = Pagination(skip=skip, limit=limit)
-        users = await tasks_service.read_all(session, pagination_schema)
-        return users
+        key = f"tasks:pagination:{skip}:{limit}"
+        cached_data = await get_object_from_redis(redis_session, key, TaskResponseList)
+        if cached_data:
+            return cached_data.tasks
+        tasks_db = await tasks_service.read_all(db_session, pagination_schema)
+        tasks_schemas = [TaskResponse.model_validate(task) for task in tasks_db]
+        tasks_list_container = TaskResponseList(tasks=tasks_schemas)
+        await set_object_to_redis(
+            redis_session, key, tasks_list_container, CACHE_TTL_TASKS
+        )
+        return tasks_schemas
     except DatabaseError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -38,12 +52,19 @@ async def get_tasks_handler(
 )
 async def get_task_handler(
     id: UUID,
-    session: AsyncSession = Depends(get_db)
+    db_session: AsyncSession = Depends(get_db),
+    redis_session: Redis = Depends(get_redis)
 ) -> TaskResponse:
     try:
         id_schema = TaskGet(id=id)
-        users = await tasks_service.read(session, id_schema)
-        return users
+        task = await get_object_from_redis(redis_session, str(id), TaskResponse)
+        if task:
+            return task
+        task = await tasks_service.read(db_session, id_schema)
+        await set_object_to_redis(
+            redis_session, str(id), TaskResponse.model_validate(task), CACHE_TTL
+        )
+        return task
     except DatabaseError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
